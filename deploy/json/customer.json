@@ -1,0 +1,191 @@
+[
+  {
+    "names": "CONSUMIDOR FINAL",
+    "dni": "9999999999",
+    "email": "consumidorfinal@hotmail.com",
+    "mobile": "0999999999",
+    "address": "ECUADOR",
+    "birthdate": "2003-05-13",
+    "send_email_invoice": false
+  },
+  {
+    "names": "AGUSTIN GARCIA CADENA ABONOS",
+    "dni": "1754696373",
+    "email": "agroinsumostulcan@hotmail.com",
+    "mobile": "0991652268",
+    "address": "PARQUE ARTESANAL ULTIMA MANZANA",
+    "birthdate": "2003-05-13",
+    "send_email_invoice": true
+  },
+  {
+    "names": "ALEX ANTONIO TERAN RIOS",
+    "dni": "0401325345",
+    "email": "alexeh19@hotmail.com",
+    "mobile": "0969941191",
+    "address": "GERÓNIMO CARRION Y COLON",
+    "birthdate": "2001-10-01",
+    "send_email_invoice": true
+  },
+  {
+    "names": "ALVARO EDUARDO JURADO CHUQUIZAN",
+    "dni": "0400958609",
+    "email": "alvarojch10@gmail.com",
+    "mobile": "0960073020",
+    "address": "AV. ANDRES BELLO Y CARLOS ONA",
+    "birthdate": "2005-01-10",
+    "send_email_invoice": true
+  },
+  {
+    "names": "ANDREA DEL CARMEN POTOSI CEPEDA",
+    "dni": "0401977327",
+    "email": "andrea.carmen@gmail.com",
+    "mobile": "0987610731",
+    "address": "CONJUNTO EL ROSAL",
+    "birthdate": "1999-10-01",
+    "send_email_invoice": true
+  },
+  {
+    "names": "ANITA SOCORRO ROSERO TACAN",
+    "dni": "0401294400",
+    "email": "alexis.rosero17@outlook.com",
+    "mobile": "0992019695",
+    "address": "OLMEDO Y LAS GRADAS",
+    "birthdate": "2001-12-15",
+    "send_email_invoice": true
+  },
+  {
+    "names": "ARGOTI OVIEDO PAOLA XIMENA",
+    "dni": "0401256409",
+    "email": "paola.argoti94@gmail.com",
+    "mobile": "0983626601",
+    "address": "OLMEDO Y CARABOBO",
+    "birthdate": "1996-10-02",
+    "send_email_invoice": true
+  },
+  {
+    "names": "AYALA MARTINEZ FRANKLIN DAVID",
+    "dni": "0402038418",
+    "email": "fdayalam@utn.edu.ec",
+    "mobile": "0981776307",
+    "address": "POLICIA",
+    "birthdate": "1998-02-15",
+    "send_email_invoice": true
+  },
+  {
+    "names": "BALSECA VILLEGAS MARCO VINICIO",
+    "dni": "1713379970",
+    "email": "vicobal_04@yahoo.com",
+    "mobile": "0991728843",
+    "address": "GRAL PLAZA Y JOSE MARIA URBINA",
+    "birthdate": "2005-02-01",
+    "send_email_invoice": true
+  },
+  {
+    "names": "RODRIGUEZ CARRERA BETTY MABELA",
+    "dni": "1713841763",
+    "email": "casaminaoro@hotmail.com",
+    "mobile": "0980513332",
+    "address": "PANAMÁ Y OLMEDO",
+    "birthdate": "2004-09-06",
+    "send_email_invoice": true
+  },
+  {
+    "names": "BRAYAN ALEXANDER ROMO AGUIRRE PEKIN",
+    "dni": "0401478417",
+    "email": "alexanrromo6@gmail.com",
+    "mobile": "0960752910",
+    "address": "ANTISANA PULIDA Y MAGDALENA",
+    "birthdate": "1999-09-01",
+    "send_email_invoice": true
+  },
+  {
+    "names": "BRAYAN DAVID GUERRON TAPIA",
+    "dni": "0402082986",
+    "email": "davisguerron@gmail.com",
+    "mobile": "0967164429",
+    "address": "CALLE MANUEL YEPEZ CASA COLOR BLANCO",
+    "birthdate": "1995-03-13",
+    "send_email_invoice": true
+  },
+  {
+    "names": "CAMACAS MORILLO YADIRA ELIZABETH",
+    "dni": "0401488952",
+    "email": "yady_49@hotmail.com",
+    "mobile": "0939911099",
+    "address": "TULCÁN /AV. VENTIMILLA Y ALEJANDRO R.MERA",
+    "birthdate": "1995-10-02",
+    "send_email_invoice": true
+  },
+  {
+    "names": "CARLOS ROLANDO ARGOTI ARGOTI",
+    "dni": "0400875613",
+    "email": "maji.argo@gmail.com",
+    "mobile": "0980601552",
+    "address": "TUNGURAHUA Y 10 DE AGOSTO",
+    "birthdate": "1999-10-12",
+    "send_email_invoice": true
+  },
+  {
+    "names": "CHICANGO TREJO JENIFFER ELIZABEHT",
+    "dni": "0401624176",
+    "email": "03diefer@hotmail.com",
+    "mobile": "0991133675",
+    "address": "CDLA. PADRE CARLOS DE LA VEGA - MANUEL MACHADO Y JORGE MANRIQUE",
+    "birthdate": "1998-09-03",
+    "send_email_invoice": true
+  },
+  {
+    "names": "CRISTIAN JAVIER GUERRERO POZO",
+    "dni": "0401497185",
+    "email": "magandre2006@hotmail.com",
+    "mobile": "0991571113",
+    "address": "EL ROSARIO REGISTRO CIVIL",
+    "birthdate": "2000-03-10",
+    "send_email_invoice": true
+  },
+  {
+    "names": "FRAGA REYES ANDREA ELIZABETH",
+    "dni": "0401641378",
+    "email": "cristianmorrios@gmail.com",
+    "mobile": "0994541825",
+    "address": "ANDRES BELLO",
+    "birthdate": "1996-03-02",
+    "send_email_invoice": true
+  },
+  {
+    "names": "VILLACRECES ACOSTA CRISTIAN STIVEN",
+    "dni": "0402075162",
+    "email": "villacreces.acosta.estiven@gmail.com",
+    "mobile": "0985880436",
+    "address": "MALDONADO Y CARABOBO ",
+    "birthdate": "1998-11-11",
+    "send_email_invoice": true
+  },
+  {
+    "names": "DAYANA CAROLINA NARVAEZ CRUZ",
+    "dni": "0402037238",
+    "email": "dayanarvaez1997@hotmail.com",
+    "mobile": "0969531603",
+    "address": "COLON Y ORIENTE",
+    "birthdate": "1997-01-10",
+    "send_email_invoice": true
+  },
+  {
+    "names": "DELIA ELIZABETH JIMENEZ TIRIRA",
+    "dni": "0401054077",
+    "email": "delissjim72@hotmail.com",
+    "mobile": "0958871303",
+    "address": "CALLE ARGENTINA TRAS DEL COLEGIO BOLIVAR",
+    "birthdate": "1999-08-08",
+    "send_email_invoice": true
+  },
+  {
+    "names": "DIEGO ANDRES BENAVIDES POZO",
+    "dni": "0401744891",
+    "email": "diego.timon@gmail.com",
+    "mobile": "0980847862",
+    "address": "CIUDADELA DEL MAESTRO",
+    "birthdate": "2003-04-02",
+    "send_email_invoice": true
+  }
+]
