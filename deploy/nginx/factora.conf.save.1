@@ -7,19 +7,19 @@ server {
     server_name localhost;
     client_max_body_size 1000M;
 
-    access_log /home/ubuntu/Invoicely/logs/nginx-access.log;
-    error_log /home/ubuntu/Invoicely/logs/nginx-error.log;
+    access_log /home/ubuntu/factora/logs/nginx-access.log;
+ ssdf   error_log /home/ubuntu/factora/logs/nginx-error.log;
 
     location /media/ {
-        alias /home/ubuntu/Invoicely/media/;
+        alias /home/ubuntu/factora/media/;
     }
 
     location /static/ {
-        alias /home/ubuntu/Invoicely/staticfiles/;
+        alias /home/ubuntu/factora/staticfiles/;
     }
 
     location /static/admin/ {
-        alias /home/ubuntu/Invoicely/staticfiles/admin/;
+        alias /home/ubuntu/factora/staticfiles/admin/;
     }
 
     location / {
@@ -29,7 +29,7 @@ server {
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_redirect off;
-        proxy_pass http://server-invoicely;
+        proxy_pass http://server-factora;
         fastcgi_buffers 8 16k;
         fastcgi_buffer_size 32k;
         fastcgi_connect_timeout 600000s;

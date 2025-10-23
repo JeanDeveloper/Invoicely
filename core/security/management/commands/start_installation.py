@@ -58,13 +58,13 @@ class Command(BaseCommand):
 
         user = User.objects.create(
             username='admin',
-            names='Jean Carlo Chunga Sandoval',
+            names='Jean Carlo',
             email='admin@admin.com',
             is_active=True,
             is_superuser=True,
             is_staff=True
         )
-        user.set_password('admin123')
+        user.set_password('admin1395')
         user.save()
         user.groups.add(group)
         print(f'Bienvenido {user.username}')

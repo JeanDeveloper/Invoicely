@@ -1,21 +1,26 @@
 #!/bin/bash
 
-NAME="factora"
+NAME="invoicely"
 DJANGO_DIR=$(dirname $(dirname $(cd `dirname $0` && pwd)))
-SOCKFILE=/tmp/gunicorn.sock
+SOCKFILE=/tmp/gunicorn-invoicely.sock
 LOG_DIR=${DJANGO_DIR}/logs/gunicorn.log
-USER=jdavilav
-GROUP=jdavilav
+USER=ubuntu
+GROUP=ubuntu
 NUM_WORKERS=5
 DJANGO_SETTINGS_MODULE=config.settings
 DJANGO_WSGI_MODULE=config.wsgi
 TIMEOUT=600000
 
-rm -frv $SOCKFILE
+if [ -e "$SOCKFILE" ]; then
+    echo "Eliminando socket antiguo..."
+    rm -f "$SOCKFILE"
+fi
 
 echo $DJANGO_DIR
 cd $DJANGO_DIR
 echo "Iniciando la aplicación $NAME con el usuario `whoami`"
+
+export PYTHONPATH=$DJANGO_DIR:$PYTHONPATH
 
 exec ${DJANGO_DIR}/venv/bin/gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
