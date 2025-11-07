@@ -107,7 +107,7 @@ var purchase = {
 
                 tr.find('input[name="current_price"]')
                     .TouchSpin({
-                        min: 0.10,
+                        min: 0.00,
                         max: 1000000,
                         step: 0.10,
                         decimals: 2,
@@ -120,7 +120,7 @@ var purchase = {
 
                 tr.find('input[name="discount"]')
                     .TouchSpin({
-                        min: 0.10,
+                        min: 0.00,
                         max: 100,
                         step: 0.10,
                         decimals: 2,
