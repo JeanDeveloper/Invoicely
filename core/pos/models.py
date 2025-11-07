@@ -120,8 +120,8 @@ class Category(models.Model):
         return item
 
     class Meta:
-        verbose_name = 'Categoria'
-        verbose_name_plural = 'Categorias'
+        verbose_name = 'Tipo'
+        verbose_name_plural = 'Tipos'
 
 
 class Product(models.Model):
