@@ -26,9 +26,8 @@ document.addEventListener('DOMContentLoaded', function (e) {
                 },
                 code: {
                     validators: {
-                        notEmpty: {},
                         stringLength: {
-                            min: 2,
+                            min: 1,
                         },
                         remote: {
                             url: pathname,

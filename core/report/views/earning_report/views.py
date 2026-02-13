@@ -4,10 +4,11 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.views.generic import FormView
 
-from core.pos.models import Product
+from core.pos.models import PurchaseDetail, InvoiceDetail, Product
 from core.report.forms import ReportForm
 from core.security.mixins import GroupModuleMixin
-
+from django.db.models import Sum, F
+from collections import defaultdict
 
 class EarningReportView(GroupModuleMixin, FormView):
     template_name = 'earning_report/report.html'
@@ -17,28 +18,91 @@ class EarningReportView(GroupModuleMixin, FormView):
         action = request.POST['action']
         data = {}
         try:
-            if action == 'search':
-                data = []
+            if action == 'search' or action == 'search_graph':
                 product_id = json.loads(request.POST['product_id'])
                 filters = Q()
                 if len(product_id):
-                    filters &= Q(id__in=product_id)
-                for i in Product.objects.filter(filters):
-                    item = i.as_dict()
-                    item['benefit'] = float(i.get_benefit())
-                    data.append(item)
-            elif action == 'search_graph':
-                product_id = json.loads(request.POST['product_id'])
-                filters = Q()
-                if len(product_id):
-                    filters &= Q(id__in=product_id)
-                queryset = Product.objects.filter(filters).order_by('name')
-                categories = [i.name for i in queryset]
-                series = []
-                series.append({'name': 'P./Compra', 'data': [float(i.price) for i in queryset]})
-                series.append({'name': 'P./Venta', 'data': [float(i.pvp) for i in queryset]})
-                series.append({'name': 'Ganancia', 'data': [float(i.get_benefit()) for i in queryset]})
-                data = {'categories': categories, 'series': series}
+                    filters &= Q(product_id__in=product_id)
+
+                ventas_query = InvoiceDetail.objects.filter(filters).values(
+                    'product_id',
+                    'price'
+                ).annotate(
+                    total_vendido=Sum('quantity')
+                ).order_by('product_id')
+
+                compras = PurchaseDetail.objects.filter(filters).select_related(
+                    'purchase', 'product', 'product__category'
+                ).order_by('product_id', 'purchase__time_joined')
+
+                lotes_por_producto = defaultdict(list)
+                for c in compras:
+                    # IMPORTANTE: Convertimos a objeto o dict para poder restar la cantidad en memoria
+                    lotes_por_producto[c.product_id].append({
+                        'id': c.id,
+                        'price': float(c.price),
+                        'quantity': float(c.quantity),
+                        'name': c.product.name,
+                        'category': c.product.category.name if c.product.category else 'S/C'
+                    })
+
+                # dict_ventas = {v['product_id']: v['total_vendido'] for v in ventas_query}
+                #
+                # compras = PurchaseDetail.objects.filter(filters).select_related('purchase', 'product', 'product__category').order_by(
+                #     'product_id',
+                #     'purchase__time_joined'  # O 'purchase__date' según tu modelo
+                # )
+                #
+                # lotes_por_producto = defaultdict(list)
+                # for c in compras:
+                #     lotes_por_producto[c.product_id].append(c)
+
+                reporte_final = []
+
+                # 3. Procesamos las ventas
+                for venta in ventas_query:
+                    p_id = venta['product_id']
+                    pvp_cobrado = float(venta['price'])  # <--- El precio editado por el usuario
+                    cantidad_restante_venta = float(venta['total_vendido'])
+
+                    lotes = lotes_por_producto.get(p_id, [])
+
+                    for lote in lotes:
+                        if cantidad_restante_venta <= 0:
+                            break
+
+                        if lote['quantity'] <= 0:
+                            continue  # Este lote ya se agotó con una venta anterior
+
+                        # Cantidad a tomar de este lote para esta venta específica
+                        cantidad_a_tomar = min(lote['quantity'], cantidad_restante_venta)
+
+                        if cantidad_a_tomar > 0:
+                            ganancia_tramo = cantidad_a_tomar * (pvp_cobrado - lote['price'])
+
+                            reporte_final.append({
+                                'product__name': lote['name'],
+                                'product__category__name': lote['category'],
+                                'product__price': lote['price'],
+                                'product__pvp': pvp_cobrado,  # <--- Mostrará el precio real de la venta
+                                'total_qty': cantidad_a_tomar,
+                                'total_benefit': float(ganancia_tramo)
+                            })
+
+                            # Descontamos del lote para que la siguiente venta no use lo mismo
+                            lote['quantity'] -= cantidad_a_tomar
+                            cantidad_restante_venta -= cantidad_a_tomar
+
+                # 4. Respuesta para la tabla o gráfico
+                if action == 'search':
+                    data = reporte_final
+                elif action == 'search_graph':
+                    # Aquí llamamos a la función que acabamos de crear
+                    data = self.get_graph_data(reporte_final)
+                else:
+                    # Para el gráfico, quizás prefieras agrupar por nombre para no tener mil barras
+                    data = self.get_graph_data(reporte_final)  # Función opcional para agrupar
+
             else:
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
@@ -49,3 +113,14 @@ class EarningReportView(GroupModuleMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Reporte de Ganancias de Productos'
         return context
+
+    def get_graph_data(self, reporte_final):
+        # Diccionario para acumular beneficios por nombre de producto
+        graph_data = {}
+        for item in reporte_final:
+            nombre = item['product__name']
+            beneficio = item['total_benefit']
+            graph_data[nombre] = graph_data.get(nombre, 0) + beneficio
+
+        # Formatear para Highcharts (formato: [['Prod 1', 100], ['Prod 2', 200]])
+        return [[nombre, beneficio] for nombre, beneficio in graph_data.items()]

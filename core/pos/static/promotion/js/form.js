@@ -214,8 +214,8 @@ $(function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             promotion.detail.products[tr.row].discount = parseFloat($(this).val());
             promotion.calculateDiscount();
-            $('td:eq(-2)', tblProducts.row(tr.row).node()).html('$' + promotion.detail.products[tr.row].total_discount.toFixed(4));
-            $('td:eq(-1)', tblProducts.row(tr.row).node()).html('$' + promotion.detail.products[tr.row].final_price.toFixed(4));
+            $('td:eq(-2)', tblProducts.row(tr.row).node()).html('S/ ' + promotion.detail.products[tr.row].total_discount.toFixed(4));
+            $('td:eq(-1)', tblProducts.row(tr.row).node()).html('S/ ' + promotion.detail.products[tr.row].final_price.toFixed(4));
         })
         .on('click', 'a[rel="remove"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();

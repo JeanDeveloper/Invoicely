@@ -20,7 +20,6 @@ var provider = {
                 {data: "name"},
                 {data: "ruc"},
                 {data: "mobile"},
-                {data: "email"},
                 {data: "address"},
                 {data: "id"},
             ],

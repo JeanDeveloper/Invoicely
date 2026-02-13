@@ -145,7 +145,7 @@
             </tr>
         {% endfor %}
         <tr>
-            <td colspan="4" class="text-right"><b>Subtotal sin impuestos</b></td>
+            <td colspan="4" class="text-right"><b>Subtotal sin descuentos</b></td>
             <td class="text-center">{{ quotation.subtotal_without_taxes|floatformat:2 }}</td>
         </tr>
         <tr>
@@ -154,10 +154,6 @@
         </tr>
         <tr>
             <td colspan="4" class="text-right"><b>Subtotal {{ quotation.tax_rate }}%</b></td>
-            <td class="text-center">{{ quotation.subtotal_with_tax|floatformat:2 }}</td>
-        </tr>
-        <tr>
-            <td colspan="4" class="text-right"><b>Subtotal 0%</b></td>
             <td class="text-center">{{ quotation.subtotal_without_tax|floatformat:2 }}</td>
         </tr>
         <tr>

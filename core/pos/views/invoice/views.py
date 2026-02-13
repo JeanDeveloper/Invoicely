@@ -92,7 +92,7 @@ class InvoiceCreateView(GroupPermissionMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['disabled_fields'] = ['subtotal_without_tax', 'subtotal_with_tax', 'tax', 'total_tax', 'total_discount', 'total_amount', 'change']
+        kwargs['disabled_fields'] = ['subtotal_without_tax', 'tax', 'total_tax', 'total_discount', 'total_amount', 'change']
         return kwargs
 
     def get_end_consumer(self):

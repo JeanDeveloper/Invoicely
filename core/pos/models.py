@@ -24,18 +24,18 @@ from core.user.models import User
 
 
 class Company(models.Model):
-    ruc = models.CharField(max_length=13, help_text='Ingrese un número de RUC', verbose_name='Número de RUC')
+    ruc = models.CharField(max_length=12, help_text='Ingrese un número de RUC', verbose_name='Número de RUC')
     name = models.CharField(max_length=50, help_text='Ingrese el nombre comercial', verbose_name='Nombre Comercial')
     address = models.CharField(max_length=200, help_text='Ingrese la dirección del Establecimiento Matriz', verbose_name='Dirección del Establecimiento Matriz')
     image = models.ImageField(upload_to='company/%Y/%m/%d', null=True, blank=True, verbose_name='Logotipo')
-    mobile = models.CharField(max_length=10, null=True, blank=True, help_text='Ingrese el teléfono celular', verbose_name='Teléfono celular')
+    mobile = models.CharField(max_length=9, null=True, blank=True, help_text='Ingrese el teléfono celular', verbose_name='Teléfono celular')
     phone = models.CharField(max_length=9, null=True, blank=True, help_text='Ingrese el teléfono convencional', verbose_name='Teléfono convencional')
     email = models.CharField(max_length=50, help_text='Ingrese la dirección de correo electrónico', verbose_name='Email')
     website = models.CharField(max_length=250, help_text='Ingrese la dirección de la página web', verbose_name='Dirección de página web')
     description = models.CharField(max_length=500, null=True, blank=True, help_text='Ingrese una breve descripción', verbose_name='Descripción')
     establishment_code = models.CharField(max_length=3, help_text='Ingrese el código del Establecimiento Emisor', verbose_name='Código del Establecimiento Emisor')
     issuing_point_code = models.CharField(max_length=3, help_text='Ingrese el código del Punto de Emisión', verbose_name='Código del Punto de Emisión')
-    tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=9, verbose_name='Impuesto IVA')
+    tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=5, verbose_name='IGV %')
     email_host = models.CharField(max_length=30, default='smtp.gmail.com', verbose_name='Servidor de correo')
     email_port = models.IntegerField(default=587, verbose_name='Puerto del servidor de correo')
     email_host_user = models.CharField(max_length=100, help_text='Ingrese el nombre de usuario del servidor de correo', verbose_name='Username del servidor de correo')
@@ -85,13 +85,12 @@ class Company(models.Model):
             ('change_company', 'Can change Compañia'),
         )
 
-
 class Provider(models.Model):
     name = models.CharField(max_length=50, unique=True, help_text='Ingrese un nombre', verbose_name='Nombre')
-    ruc = models.CharField(max_length=13, unique=True, help_text='Ingrese un RUC', verbose_name='RUC')
-    mobile = models.CharField(max_length=10, unique=True, help_text='Ingrese un número de teléfono celular', verbose_name='Teléfono celular')
+    ruc = models.CharField(max_length=12, unique=True, help_text='Ingrese un RUC', verbose_name='RUC')
+    mobile = models.CharField(max_length=9, null= True, blank= True, unique=True, help_text='Ingrese un número de celular', verbose_name='Celular')
     address = models.CharField(max_length=500, null=True, blank=True, help_text='Ingrese una dirección', verbose_name='Dirección')
-    email = models.CharField(max_length=50, unique=True, help_text='Ingrese un email', verbose_name='Email')
+    # email = models.CharField(max_length=50, null= True, blank= True, unique=True, help_text='Ingrese un email', verbose_name='Correo')
 
     def __str__(self):
         return self.get_full_name()
@@ -108,9 +107,8 @@ class Provider(models.Model):
         verbose_name = 'Proveedor'
         verbose_name_plural = 'Proveedores'
 
-
 class Category(models.Model):
-    name = models.CharField(max_length=50, unique=True, help_text='Ingrese un nombre', verbose_name='Nombre')
+    name = models.CharField(max_length=100, unique=True, help_text='Ingrese un nombre', verbose_name='Nombre')
 
     def __str__(self):
         return self.name
@@ -123,19 +121,17 @@ class Category(models.Model):
         verbose_name = 'Tipo'
         verbose_name_plural = 'Tipos'
 
-
 class Product(models.Model):
     name = models.CharField(max_length=150, help_text='Ingrese un nombre', verbose_name='Nombre')
-    code = models.CharField(max_length=50, unique=True, help_text='Ingrese un código', verbose_name='Código')
+    code = models.CharField(max_length=10, unique=True, help_text='Ingrese un código', verbose_name='Código')
     description = models.CharField(max_length=500, null=True, blank=True, help_text='Ingrese una descripción', verbose_name='Descripción')
     category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='Categoría')
     price = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Precio de Compra')
-    pvp = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Precio de Venta Sin Impuesto')
+    pvp = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Precio de Venta Con Impuesto')
     image = models.ImageField(upload_to='product/%Y/%m/%d', null=True, blank=True, verbose_name='Imagen')
     barcode = models.ImageField(upload_to='barcode/%Y/%m/%d', null=True, blank=True, verbose_name='Código de barra')
     is_inventoried = models.BooleanField(default=True, verbose_name='¿Es inventariado?')
     stock = models.IntegerField(default=0)
-    has_tax = models.BooleanField(default=True, verbose_name='¿Se cobra impuesto?')
 
     def __str__(self):
         return self.get_full_name()
@@ -168,6 +164,12 @@ class Product(models.Model):
 
     def get_benefit(self):
         return round(float(self.pvp) - float(self.price), 2)
+
+    def generate_code(self):
+        last = Product.objects.last()
+        if last:
+            return int(last.code) + 1
+        return 1
 
     def generate_barcode(self):
         try:
@@ -209,12 +211,11 @@ class Product(models.Model):
             ('adjust_product_stock', 'Can adjust_product_stock Producto'),
         )
 
-
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    dni = models.CharField(max_length=13, unique=True, help_text='Ingrese un número de cédula o RUC', verbose_name='Número de cédula o RUC')
-    mobile = models.CharField(max_length=10, null=True, blank=True, help_text='Ingrese un teléfono', verbose_name='Teléfono')
-    birthdate = models.DateField(default=datetime.now, verbose_name='Fecha de nacimiento')
+    dni = models.CharField(max_length=12, unique=True, help_text='Ingrese el DNI o RUC', verbose_name='DNI o RUC')
+    mobile = models.CharField(max_length=9, null=True, blank=True, help_text='Ingrese un numero de celular', verbose_name='Celular')
+    # birthdate = models.DateField(default=datetime.now, verbose_name='Fecha de nacimiento')
     address = models.CharField(max_length=500, null=True, blank=True, help_text='Ingrese una dirección', verbose_name='Dirección')
     send_email_invoice = models.BooleanField(default=True, verbose_name='¿Enviar email de factura?')
 
@@ -231,13 +232,12 @@ class Customer(models.Model):
         item = model_to_dict(self)
         item['text'] = self.get_full_name()
         item['user'] = self.user.as_dict()
-        item['birthdate'] = self.formatted_birthdate()
+        item['birthdate'] = ""
         return item
 
     class Meta:
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
-
 
 class ExpenseType(models.Model):
     name = models.CharField(max_length=50, unique=True, help_text='Ingrese un nombre', verbose_name='Nombre')
@@ -259,7 +259,6 @@ class ExpenseType(models.Model):
             ('change_expense_type', 'Can change Tipo de Gasto'),
             ('delete_expense_type', 'Can delete Tipo de Gasto'),
         )
-
 
 class Expense(models.Model):
     expense_type = models.ForeignKey(ExpenseType, on_delete=models.PROTECT, verbose_name='Tipo de Gasto')
@@ -287,7 +286,6 @@ class Expense(models.Model):
         verbose_name = 'Gasto'
         verbose_name_plural = 'Gastos'
 
-
 class Promotion(models.Model):
     start_date = models.DateField(default=datetime.now)
     end_date = models.DateField(default=datetime.now)
@@ -310,7 +308,6 @@ class Promotion(models.Model):
     class Meta:
         verbose_name = 'Promoción'
         verbose_name_plural = 'Promociones'
-
 
 class PromotionDetail(models.Model):
     promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE)
@@ -347,23 +344,21 @@ class PromotionDetail(models.Model):
         verbose_name_plural = 'Detalle de Promociones'
         default_permissions = ()
 
-
 class TransactionSummary(models.Model):
     receipt_number = models.CharField(max_length=9, null=True, blank=True, verbose_name='Número de comprobante')
-    receipt_number_full = models.CharField(max_length=9, null=True, blank=True, verbose_name='Número completo de comprobante')
+    receipt_number_full = models.CharField(max_length=20, null=True, blank=True, verbose_name='Número completo de comprobante')
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
     time_joined = models.DateTimeField(default=datetime.now, verbose_name='Fecha y hora de registro')
-    subtotal_without_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal sin impuestos')
-    subtotal_with_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal con impuestos')
-    tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='IVA')
-    total_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total de IVA')
+    subtotal_without_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal')
+    tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='IGV %')
+    total_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total de IGV (S/.)')
     total_discount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor total del descuento')
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total a pagar')
 
     @property
     def subtotal(self):
-        return float(self.subtotal_with_tax) + float(self.subtotal_without_tax)
+        return float(self.subtotal_without_tax)
 
     @property
     def tax_rate(self):
@@ -380,7 +375,6 @@ class TransactionSummary(models.Model):
         item['date_joined'] = self.formatted_date_joined()
         item['time_joined'] = self.formatted_time_joined()
         item['subtotal_without_tax'] = float(self.subtotal_without_tax)
-        item['subtotal_with_tax'] = float(self.subtotal_with_tax)
         item['tax'] = float(self.tax)
         item['total_tax'] = float(self.total_tax)
         item['total_discount'] = float(self.total_discount)
@@ -403,7 +397,6 @@ class TransactionSummary(models.Model):
 
     class Meta:
         abstract = True
-
 
 class TransactionDetailBase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
@@ -442,7 +435,6 @@ class TransactionDetailBase(models.Model):
     class Meta:
         abstract = True
 
-
 class Purchase(TransactionSummary):
     number = models.CharField(max_length=8, unique=True, help_text='Ingrese un número de factura', verbose_name='Número de factura')
     provider = models.ForeignKey(Provider, on_delete=models.PROTECT, verbose_name='Proveedor')
@@ -456,7 +448,7 @@ class Purchase(TransactionSummary):
         for detail in self.purchasedetail_set.filter():
             detail.price = float(detail.price)
             detail.tax = float(self.tax)
-            detail.price_with_tax = detail.price + (detail.price * detail.tax)
+            detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
             detail.total_discount = detail.subtotal * float(detail.discount)
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
@@ -464,9 +456,16 @@ class Purchase(TransactionSummary):
             detail.save()
 
     def calculate_invoice(self):
-        self.subtotal_without_tax = float(self.purchasedetail_set.filter(product__has_tax=False).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.subtotal_with_tax = float(self.purchasedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.total_tax = float(self.purchasedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        totals = self.purchasedetail_set.aggregate(
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+        )
+
+        subtotal = totals['total_subtotal']
+        discount = totals['total_discount']
+
+        self.total_tax = float(self.purchasedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
         self.total_discount = float(self.purchasedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
         self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
         self.save()
@@ -501,7 +500,6 @@ class Purchase(TransactionSummary):
             ('delete_purchase', 'Can delete Compra'),
         )
 
-
 class PurchaseDetail(TransactionDetailBase):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
 
@@ -516,7 +514,6 @@ class PurchaseDetail(TransactionDetailBase):
         verbose_name = 'Detalle de Compra'
         verbose_name_plural = 'Detalle de Compras'
         default_permissions = ()
-
 
 class AccountPayable(models.Model):
     purchase = models.ForeignKey(Purchase, on_delete=models.PROTECT)
@@ -569,7 +566,6 @@ class AccountPayable(models.Model):
             ('delete_account_payable', 'Can delete Cuenta por pagar'),
         )
 
-
 class AccountPayablePayment(models.Model):
     account_payable = models.ForeignKey(AccountPayable, on_delete=models.CASCADE, verbose_name='Cuenta por pagar')
     date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
@@ -602,7 +598,6 @@ class AccountPayablePayment(models.Model):
         verbose_name_plural = 'Pago de unas Cuentas por pagar'
         default_permissions = ()
 
-
 class Invoice(TransactionSummary):
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, verbose_name='Cliente')
     employee = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, verbose_name='Empleado')
@@ -627,7 +622,7 @@ class Invoice(TransactionSummary):
         for detail in self.invoicedetail_set.filter():
             detail.price = float(detail.price)
             detail.tax = float(self.tax)
-            detail.price_with_tax = detail.price + (detail.price * detail.tax)
+            detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
             detail.total_discount = detail.subtotal * float(detail.discount)
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
@@ -635,9 +630,15 @@ class Invoice(TransactionSummary):
             detail.save()
 
     def calculate_invoice(self):
-        self.subtotal_without_tax = float(self.invoicedetail_set.filter(product__has_tax=False).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.subtotal_with_tax = float(self.invoicedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.total_tax = float(self.invoicedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        totals = self.invoicedetail_set.aggregate(
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+        )
+        subtotal = totals['total_subtotal']
+        discount = totals['total_discount']
+
+        self.total_tax = float(self.invoicedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
         self.total_discount = float(self.invoicedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
         self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
         self.save()
@@ -708,7 +709,6 @@ class Invoice(TransactionSummary):
         )
         ordering = ['id']
 
-
 class InvoiceDetail(TransactionDetailBase):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
 
@@ -729,7 +729,6 @@ class InvoiceDetail(TransactionDetailBase):
         verbose_name_plural = 'Detalle de Facturas'
         default_permissions = ()
         ordering = ['id']
-
 
 class AccountReceivable(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT)
@@ -782,7 +781,6 @@ class AccountReceivable(models.Model):
             ('delete_account_receivable', 'Can delete Cuenta por cobrar'),
         )
 
-
 class AccountReceivablePayment(models.Model):
     account_receivable = models.ForeignKey(AccountReceivable, on_delete=models.CASCADE, verbose_name='Cuenta por cobrar')
     date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
@@ -815,7 +813,6 @@ class AccountReceivablePayment(models.Model):
         verbose_name_plural = 'Detalles de unas Cuentas por cobrar'
         default_permissions = ()
 
-
 class CreditNote(TransactionSummary):
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, verbose_name='Factura')
     motive = models.CharField(max_length=300, null=True, blank=True, help_text='Ingrese una descripción', verbose_name='Motivo')
@@ -833,7 +830,7 @@ class CreditNote(TransactionSummary):
         for detail in self.creditnotedetail_set.filter():
             detail.price = float(detail.price)
             detail.tax = float(self.tax)
-            detail.price_with_tax = detail.price + (detail.price * detail.tax)
+            detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
             detail.total_discount = detail.subtotal * float(detail.discount)
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
@@ -841,9 +838,16 @@ class CreditNote(TransactionSummary):
             detail.save()
 
     def calculate_invoice(self):
-        self.subtotal_without_tax = float(self.creditnotedetail_set.filter(product__has_tax=False).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.subtotal_with_tax = float(self.creditnotedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.total_tax = float(self.creditnotedetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        totals = self.creditnotedetail_set.aggregate(
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+        )
+
+        subtotal = totals['total_subtotal']
+        discount = totals['total_discount']
+
+        self.total_tax = float(self.creditnotedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
         self.total_discount = float(self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
         self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
         self.save()
@@ -887,7 +891,6 @@ class CreditNote(TransactionSummary):
         )
         ordering = ['id']
 
-
 class CreditNoteDetail(TransactionDetailBase):
     credit_note = models.ForeignKey(CreditNote, on_delete=models.CASCADE)
     invoice_detail = models.ForeignKey(InvoiceDetail, on_delete=models.CASCADE)
@@ -903,7 +906,6 @@ class CreditNoteDetail(TransactionDetailBase):
         verbose_name_plural = 'Detalle Devoluciones Ventas'
         default_permissions = ()
         ordering = ['id']
-
 
 class Quotation(TransactionSummary):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='Cliente')
@@ -951,7 +953,7 @@ class Quotation(TransactionSummary):
         for detail in self.quotationdetail_set.filter():
             detail.price = float(detail.price)
             detail.tax = float(self.tax)
-            detail.price_with_tax = detail.price + (detail.price * detail.tax)
+            detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
             detail.total_discount = detail.subtotal * float(detail.discount)
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
@@ -959,9 +961,16 @@ class Quotation(TransactionSummary):
             detail.save()
 
     def calculate_invoice(self):
-        self.subtotal_without_tax = float(self.quotationdetail_set.filter(product__has_tax=False).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.subtotal_with_tax = float(self.quotationdetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_amount'), 0.00, output_field=FloatField()))['result'])
-        self.total_tax = float(self.quotationdetail_set.filter(product__has_tax=True).aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        totals = self.quotationdetail_set.aggregate(
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
+            total_discount = Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+        )
+
+        subtotal = totals['total_subtotal']
+        discount = totals['total_discount']
+
+        self.total_tax = float(self.quotationdetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
         self.total_discount = float(self.quotationdetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
         self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
         self.save()
@@ -1011,7 +1020,6 @@ class Quotation(TransactionSummary):
             ('delete_quotation', 'Can delete Proforman'),
             ('print_quotation', 'Can print Proforma'),
         )
-
 
 class QuotationDetail(TransactionDetailBase):
     quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE)

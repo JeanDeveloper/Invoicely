@@ -146,22 +146,20 @@ var quotation = {
         var tax = this.detail.tax / 100;
         this.detail.products.forEach(function (value, index, array) {
             value.tax = parseFloat(tax);
-            value.price_with_tax = value.current_price + (value.current_price * value.tax);
+            value.price_with_tax = value.current_price;
             value.subtotal = value.current_price * value.quantity;
             value.total_discount = value.subtotal * parseFloat((value.discount / 100));
             value.total_tax = (value.subtotal - value.total_discount) * value.tax;
             value.total_amount = value.subtotal - value.total_discount;
         });
 
-        this.detail.subtotal_without_tax = this.detail.products.filter(value => !value.has_tax).reduce((a, b) => a + (b.total_amount || 0), 0);
-        this.detail.subtotal_with_tax = this.detail.products.filter(value => value.has_tax).reduce((a, b) => a + (b.total_amount || 0), 0);
-        this.detail.total_discount = this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0);
-        this.detail.subtotal = parseFloat(this.detail.subtotal_without_tax) + parseFloat(this.detail.subtotal_with_tax);
-        this.detail.total_tax = parseFloat(this.detail.products.filter(value => value.has_tax).reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.subtotal = parseFloat(this.detail.products.reduce((a, b) => a + b.subtotal, 0).toFixed(2));
+        this.detail.total_discount = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0).toFixed(2));
+        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.subtotal = parseFloat(this.detail.subtotal) - (this.detail.total_discount > 0 ? parseFloat(this.detail.total_discount) : 0) - parseFloat(this.detail.total_tax);
         this.detail.total_amount = (Math.round(this.detail.subtotal * 100) / 100) + (Math.round(this.detail.total_tax * 100) / 100);
 
-        $('input[name="subtotal_without_tax"]').val(this.detail.subtotal_without_tax.toFixed(2));
-        $('input[name="subtotal_with_tax"]').val(this.detail.subtotal_with_tax.toFixed(2));
+        $('input[name="subtotal"]').val(this.detail.subtotal.toFixed(2));
         $('input[name="tax"]').val(this.detail.tax.toFixed(2));
         $('input[name="total_tax"]').val(this.detail.total_tax.toFixed(2));
         $('input[name="total_discount"]').val(this.detail.total_discount.toFixed(2));
@@ -376,13 +374,13 @@ $(function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             quotation.detail.products[tr.row].quantity = parseInt($(this).val());
             quotation.totalCalculator();
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + quotation.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + quotation.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('change', 'input[name="current_price"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             quotation.detail.products[tr.row].current_price = parseFloat($(this).val());
             quotation.totalCalculator();
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + quotation.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + quotation.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('change', 'input[name="discount"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
@@ -390,7 +388,7 @@ $(function () {
             quotation.totalCalculator();
             var parent = $(this).closest('.bootstrap-touchspin');
             parent.find('.bootstrap-touchspin-postfix').children().html(quotation.detail.products[tr.row].total_discount.toFixed(2));
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + quotation.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + quotation.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('click', 'a[rel="remove"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();

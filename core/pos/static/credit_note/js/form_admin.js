@@ -14,7 +14,7 @@ var credit_note = {
             autoWidth: false,
             destroy: true,
             data: this.detail.products,
-            ordering: false,
+            // ordering: false,
             lengthChange: false,
             searching: false,
             paginate: false,
@@ -112,21 +112,20 @@ var credit_note = {
         var products = this.detail.products.filter(value => value.selected === 1);
         products.forEach(function (value, index, array) {
             value.tax = parseFloat(tax);
-            value.price_with_tax = value.price + (value.price * value.tax);
+            value.price_with_tax = value.price;
             value.subtotal = value.price * value.new_quantity;
             value.total_discount = value.subtotal * parseFloat((value.discount / 100));
             value.total_tax = (value.subtotal - value.total_discount) * value.tax;
             value.total_amount = value.subtotal - value.total_discount;
         });
-        this.detail.subtotal_without_tax = products.filter(value => !value.product.has_tax).reduce((a, b) => a + (b.total_amount || 0), 0);
-        this.detail.subtotal_with_tax = products.filter(value => value.product.has_tax).reduce((a, b) => a + (b.total_amount || 0), 0);
+
+        this.detail.subtotal = products.reduce((a, b) => a + (b.subtotal || 0), 0);
         this.detail.total_discount = products.reduce((a, b) => a + (b.total_discount || 0), 0);
-        this.detail.subtotal = parseFloat(this.detail.subtotal_without_tax) + parseFloat(this.detail.subtotal_with_tax);
-        this.detail.total_tax = parseFloat(this.detail.products.filter(value => value.has_tax).reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.subtotal = parseFloat(this.detail.subtotal) - (this.detail.total_discount > 0 ? parseFloat(this.detail.total_discount) : 0) - parseFloat(this.detail.total_tax);
         this.detail.total_amount = (Math.round(this.detail.subtotal * 100) / 100) + (Math.round(this.detail.total_tax * 100) / 100);
 
-        $('input[name="subtotal_without_tax"]').val(this.detail.subtotal_without_tax.toFixed(2));
-        $('input[name="subtotal_with_tax"]').val(this.detail.subtotal_with_tax.toFixed(2));
+        $('input[name="subtotal"]').val(this.detail.subtotal.toFixed(2));
         $('input[name="tax"]').val(this.detail.tax.toFixed(2));
         $('input[name="total_tax"]').val(this.detail.total_tax.toFixed(2));
         $('input[name="total_discount"]').val(this.detail.total_discount.toFixed(2));
@@ -300,20 +299,20 @@ $(function () {
             credit_note.detail.products[tr.row].selected = this.checked ? 1 : 0;
             $('td', tblProducts.row(tr.row).node()).find('input[type="text"]').prop('disabled', !this.checked);
             credit_note.totalCalculator();
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('change', 'input[name="new_quantity"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             credit_note.detail.products[tr.row].new_quantity = parseInt($(this).val());
             credit_note.totalCalculator();
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('change', 'input[name="discount"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             credit_note.detail.products[tr.row].discount = parseFloat($(this).val());
             credit_note.totalCalculator();
             $(this).next().find('.input-group-text').html(credit_note.detail.products[tr.row].total_discount.toFixed(2));
-            $('td:last', tblProducts.row(tr.row).node()).html('$' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
+            $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
         })
         .on('click', 'a[rel="remove"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();

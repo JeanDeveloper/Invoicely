@@ -38,39 +38,39 @@ document.addEventListener('DOMContentLoaded', function (e) {
                 },
                 ruc: {
                     validators: {
-                        // notEmpty: {},
-                        // stringLength: {
-                        //     min: 12
-                        // },
-                        // digits: {},
-                        // callback: {
-                        //     message: 'El número de ruc es incorrecto',
-                        //     callback: function (input) {
-                        //         return validate_dni_ruc(input.value);
-                        //     },
-                        // },
-                        // remote: {
-                        //     url: pathname,
-                        //     data: function () {
-                        //         return {
-                        //             ruc: fv.form.querySelector('[name="ruc"]').value,
-                        //             field: 'ruc',
-                        //             action: 'validate_data'
-                        //         };
-                        //     },
-                        //     message: 'El número de ruc ya se encuentra registrado',
-                        //     method: 'POST',
-                        //     headers: {
-                        //         'X-CSRFToken': csrftoken
-                        //     },
-                        // },
+                        notEmpty: {},
+                        stringLength: {
+                            min: 12
+                        },
+                        digits: {},
+                        callback: {
+                            message: 'El número de ruc es incorrecto',
+                            callback: function (input) {
+                                return validate_dni_ruc(input.value);
+                            },
+                        },
+                        remote: {
+                            url: pathname,
+                            data: function () {
+                                return {
+                                    ruc: fv.form.querySelector('[name="ruc"]').value,
+                                    field: 'ruc',
+                                    action: 'validate_data'
+                                };
+                            },
+                            message: 'El número de ruc ya se encuentra registrado',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrftoken
+                            },
+                        },
                     }
                 },
                 mobile: {
                     validators: {
                         notEmpty: {},
                         stringLength: {
-                            min: 10
+                            min: 9
                         },
                         digits: {},
                         remote: {
@@ -82,34 +82,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
                                     action: 'validate_data'
                                 };
                             },
-                            message: 'El número de teléfono ya se encuentra registrado',
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrftoken
-                            },
-                        }
-                    }
-                },
-                email: {
-                    validators: {
-                        notEmpty: {},
-                        stringLength: {
-                            min: 5
-                        },
-                        regexp: {
-                            regexp: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/i,
-                            message: 'El formato email no es correcto'
-                        },
-                        remote: {
-                            url: pathname,
-                            data: function () {
-                                return {
-                                    email: fv.form.querySelector('[name="email"]').value,
-                                    field: 'email',
-                                    action: 'validate_data'
-                                };
-                            },
-                            message: 'El email ya se encuentra registrado',
+                            message: 'El número ya se encuentra registrado',
                             method: 'POST',
                             headers: {
                                 'X-CSRFToken': csrftoken
@@ -119,9 +92,9 @@ document.addEventListener('DOMContentLoaded', function (e) {
                 },
                 address: {
                     validators: {
-                        // stringLength: {
-                        //     min: 4,
-                        // }
+                        stringLength: {
+                            min: 4,
+                        }
                     }
                 }
             },

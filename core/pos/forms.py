@@ -48,6 +48,12 @@ class CategoryForm(BaseModelForm):
 class ProductForm(BaseModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if not self.instance.pk:
+            self.fields['code'].initial = self.Meta.model().generate_code()
+
+        self.fields['code'].widget.attrs['readonly'] = True
+
         update_form_fields_attributes(self, exclude_fields=['price', 'pvp', 'description'])
 
     class Meta:
@@ -56,7 +62,7 @@ class ProductForm(BaseModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'placeholder': 'Ingrese una descripción', 'rows': 3, 'cols': 3}),
             'price': forms.TextInput(),
-            'pvp': forms.TextInput(),
+            'pvp': forms.TextInput()
         }
         exclude = ['stock', 'barcode']
 
@@ -66,18 +72,21 @@ class PurchaseForm(BaseModelForm):
         super().__init__(*args, **kwargs)
         update_form_fields_attributes(self, exclude_fields=['search'])
         self.fields['provider'].queryset = Provider.objects.none()
-        for field_name in ['subtotal_without_tax', 'subtotal_with_tax', 'tax', 'total_tax', 'total_discount', 'total_amount']:
+        for field_name in ['subtotal', 'tax', 'total_tax', 'total_amount']:
             self.fields[field_name].disabled = True
 
     class Meta:
         model = Purchase
         fields = '__all__'
 
+    subtotal = forms.DecimalField(widget=forms.TextInput(attrs={
+        'class': 'form-control',
+    }), label='Subtotal')
+
     search = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Ingrese un nombre o código de producto'
     }), label='Buscador de productos')
-
 
 class AccountPayablePaymentForm(BaseModelForm):
     def __init__(self, *args, **kwargs):
@@ -212,13 +221,17 @@ class QuotationForm(BaseModelForm):
         super().__init__(*args, **kwargs)
         update_form_fields_attributes(self, exclude_fields=['search'])
         self.fields['customer'].queryset = Customer.objects.none()
-        for field_name in ['subtotal_without_tax', 'subtotal_with_tax', 'tax', 'total_tax', 'total_discount', 'total_amount']:
+        for field_name in ['subtotal', 'tax', 'total_tax',  'total_amount']:
             self.fields[field_name].disabled = True
 
     class Meta:
         model = Quotation
         fields = '__all__'
         exclude = ['company', 'employee']
+
+    subtotal = forms.DecimalField(widget=forms.TextInput(attrs={
+        'class': 'form-control',
+    }), label='Subtotal')
 
     search = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
@@ -231,7 +244,7 @@ class CreditNoteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         update_form_fields_attributes(self, exclude_fields=['select_all'])
         self.fields['invoice'].queryset = Invoice.objects.none()
-        for field_name in ['subtotal_without_tax', 'subtotal_with_tax', 'tax', 'total_tax', 'total_discount', 'total_amount']:
+        for field_name in ['subtotal', 'tax', 'total_tax', 'total_discount', 'total_amount']:
             self.fields[field_name].disabled = True
 
     class Meta:
@@ -240,6 +253,10 @@ class CreditNoteForm(forms.ModelForm):
         exclude = [
             'company', 'employee', 'time_joined', 'status'
         ]
+
+    subtotal = forms.DecimalField(widget=forms.TextInput(attrs={
+        'class': 'form-control',
+    }), label='Subtotal')
 
     select_all = forms.BooleanField(widget=forms.CheckboxInput(attrs={
         'class': 'form-check-input'

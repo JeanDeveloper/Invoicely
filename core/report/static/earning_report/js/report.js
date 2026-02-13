@@ -1,5 +1,16 @@
 var select_product;
+var columns = [];
 var report = {
+    initTable: function () {
+        tblReport = $('#tblReport').DataTable({
+            autoWidth: false,
+            destroy: true,
+        });
+        tblReport.settings()[0].aoColumns.forEach(function (value, index, array) {
+            columns.push(value.sWidthOrig);
+        });
+    },
+
     list: function () {
         var params = {
             'action': 'search',
@@ -27,7 +38,8 @@ var report = {
                     extend: 'excelHtml5',
                     text: 'Descargar Excel <i class="fas fa-file-excel"></i>',
                     titleAttr: 'Excel',
-                    className: 'btn btn-success btn-xs btn-flat'
+                    className: 'btn btn-success btn-xs btn-flat',
+                    footer:true
                 },
                 {
                     extend: 'pdfHtml5',
@@ -37,6 +49,10 @@ var report = {
                     download: 'open',
                     orientation: 'landscape',
                     pageSize: 'LEGAL',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5],
+                        footer: true
+                    },
                     customize: function (doc) {
                         doc.styles = {
                             header: {
@@ -62,7 +78,26 @@ var report = {
                                 alignment: 'center'
                             }
                         };
-                        doc.content[1].table.widths = columns;
+                        var total_footer = $('#tblReport tfoot th:last').text();
+                        var footerRow = [
+                            { text: 'Total Final:', colSpan: 5, alignment: 'right', bold: true, fillColor: '#f1f1f1' },
+                            {}, {}, {}, {},
+                            { text: total_footer, alignment: 'center', bold: true, fillColor: '#f1f1f1' }
+                        ];
+                        doc.content[1].table.body.push(footerRow);
+                        doc.content[1].table.widths = ['*', '*', '*', '*', '*', '*'];
+
+                        var rowCount = doc.content[1].table.body.length;
+                        for (var i = 0; i < rowCount; i++) {
+                            for (var j = 0; j < 6; j++) {
+                                // SOLUCIÓN: Solo aplicar alineación si la celda existe y tiene contenido
+                                var cell = doc.content[1].table.body[i][j];
+                                if (cell && cell.text !== undefined) {
+                                    cell.alignment = 'center';
+                                }
+                            }
+                        }
+
                         doc.content[1].margin = [0, 35, 0, 0];
                         doc.content[1].layout = {};
                         doc['footer'] = (function (page, pages) {
@@ -70,7 +105,7 @@ var report = {
                                 columns: [
                                     {
                                         alignment: 'left',
-                                        text: ['Fecha de creación: ', {text: current_date}]
+                                        text: ['Fecha de creación: ', {text: new moment().format('YYYY-MM-DD')}]
                                     },
                                     {
                                         alignment: 'right',
@@ -85,55 +120,58 @@ var report = {
                 }
             ],
             columns: [
-                {data: "name"},
-                {data: "category.name"},
-                {data: "price"},
-                {data: "pvp"},
-                {data: "benefit"},
+                {data: "product__name"},
+                {data: "product__category__name"},
+                {data: "product__price"},
+                {data: "product__pvp"},
+                {data: "total_qty"},
+                {data: "total_benefit"},
             ],
             columnDefs: [
                 {
-                    targets: [-1, -2, -3],
+                    targets: [-1, -3, -4],
                     class: 'text-center',
                     render: function (data, type, row) {
                         return 'S/' + data.toFixed(2);
                     }
+                },
+                {
+                    targets: [-2],
+                    class: 'text-center',
+                    render: function (data, type, row) {
+                        return data;
+                    }
                 }
             ],
+            fnFooterCallback: function (row, data, start, end, display) {
+                var api = this.api()
+
+                var intVal = function (i) {
+                    return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+                };
+
+                var total = api
+                    .column(5, { search: 'applied' })
+                    .data()
+                    .reduce(function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0);
+
+                $(api.column(5).footer()).html(
+                    'S/' + total.toFixed(2)
+                );
+
+            },
             rowCallback: function (row, data, index) {
 
             },
             initComplete: function (settings, json) {
                 $(this).wrap('<div class="dataTables_scroll"><div/>');
-                report.graph();
+                // report.graph();
             }
         });
     },
-    graph: function () {
-        execute_ajax_request({
-            'params': {
-                'action': 'search_graph',
-                'product_id': JSON.stringify(select_product.select2('data').map(value => value.id)),
-            },
-            'success': function (request) {
-                Highcharts.chart('container', {
-                    chart: {
-                        type: 'column'
-                    },
-                    title: {
-                        text: ''
-                    },
-                    xAxis: {
-                        categories: request.categories
-                    },
-                    credits: {
-                        enabled: false
-                    },
-                    series: request.series
-                });
-            }
-        });
-    }
+
 };
 
 $(function () {

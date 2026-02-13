@@ -130,7 +130,7 @@
         </thead>
         <tbody>
         <tr>
-            <td class="float-right font-weight-bold">Subtotal sin impuestos</td>
+            <td class="float-right font-weight-bold">Subtotal sin descuentos</td>
             <td class="text-right">{{ object.subtotal_without_taxes|floatformat:2 }}</td>
         </tr>
         <tr>
@@ -139,10 +139,6 @@
         </tr>
         <tr>
             <td class="float-right font-weight-bold">Subtotal {{ object.tax_rate }}%</td>
-            <td class="text-right">{{ object.subtotal_with_tax|floatformat:2 }}</td>
-        </tr>
-        <tr>
-            <td class="float-right font-weight-bold">Subtotal 0%</td>
             <td class="text-right">{{ object.subtotal_without_tax|floatformat:2 }}</td>
         </tr>
         <tr>

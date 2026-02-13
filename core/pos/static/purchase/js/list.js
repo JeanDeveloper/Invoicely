@@ -129,7 +129,7 @@ $(function () {
                     {data: "product.full_name"},
                     {data: "price"},
                     {data: "quantity"},
-                    {data: "subtotal"},
+                    {data: "total_amount"},
                 ],
                 columnDefs: [
                     {

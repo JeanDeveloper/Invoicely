@@ -105,26 +105,10 @@
             <div class="container">
                 <div class="row mb-2">
                     <div class="col-lg-4 d-flex align-items-center">
-                        <span class="font-weight-bold">{{ form.subtotal_without_tax.label|upper }}:</span>
+                        <span class="font-weight-bold">{{ form.subtotal.label|upper }}:</span>
                     </div>
                     <div class="col-lg-8 d-flex align-items-center justify-content-start">
-                        {{ form.subtotal_without_tax }}
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-lg-4 d-flex align-items-center">
-                        <span class="font-weight-bold">{{ form.subtotal_with_tax.label|upper }}:</span>
-                    </div>
-                    <div class="col-lg-8 d-flex align-items-center justify-content-start">
-                        {{ form.subtotal_with_tax }}
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-lg-4 d-flex align-items-center">
-                        <span class="font-weight-bold">{{ form.total_discount.label|upper }}:</span>
-                    </div>
-                    <div class="col-lg-8 d-flex align-items-center justify-content-start">
-                        {{ form.total_discount }}
+                        {{ form.subtotal }}
                     </div>
                 </div>
                 <div class="row mb-2">

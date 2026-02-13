@@ -32,16 +32,17 @@ var report = {
                 dataSrc: ''
             },
             order: [[0, 'asc']],
-            paging: false,
+            paging: true,
             ordering: true,
-            searching: false,
+            searching: true,
             dom: 'Bfrtip',
             buttons: [
                 {
                     extend: 'excelHtml5',
                     text: ' <i class="fas fa-file-excel"></i> Descargar Excel',
                     titleAttr: 'Excel',
-                    className: 'btn btn-success btn-flat btn-sm'
+                    className: 'btn btn-success btn-flat btn-sm',
+                    footer: true
                 },
                 {
                     extend: 'pdfHtml5',
@@ -76,6 +77,13 @@ var report = {
                                 alignment: 'center'
                             }
                         };
+                        var total_footer = $('#tblReport tfoot th:last').text();
+                        var footerRow = [
+                            { text: 'Total Final:', colSpan: 6, alignment: 'right', bold: true, fillColor: '#f1f1f1' },
+                            {}, {}, {}, {}, {},
+                            { text: total_footer, alignment: 'center', bold: true, fillColor: '#f1f1f1' }
+                        ];
+                        doc.content[1].table.body.push(footerRow);
                         doc.content[1].table.widths = columns;
                         doc.content[1].margin = [0, 35, 0, 0];
                         doc.content[1].layout = {};
@@ -123,6 +131,25 @@ var report = {
                     }
                 }
             ],
+            fnFooterCallback: function (row, data, start, end, display) {
+                var api = this.api();
+
+                var intVal = function (i) {
+                    return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+                };
+
+                var total = api
+                .column(6, { search: 'applied' })
+                .data()
+                .reduce(function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0);
+
+                $(api.column(6).footer()).html(
+                    'S/' + total.toFixed(2)
+                );
+
+            },
             rowCallback: function (row, data, index) {
 
             },
