@@ -36,7 +36,7 @@ DEBUG = env('DEBUG', default=True)
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://18.219.122.201/",
+    "http://18.219.122.201",
 ]
 
 # Application definition
