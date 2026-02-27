@@ -37,6 +37,8 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     "http://18.219.122.201",
+    "http://18.219.122.201:8000",
+    "http://18.219.122.201:80",
 ]
 
 # Application definition
