@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.views.generic import FormView
 
-from core.pos.models import PurchaseDetail, InvoiceDetail, Product
+from core.pos.models import PurchaseDetail, InvoiceDetail, CreditNoteDetail
 from core.report.forms import ReportForm
 from core.security.mixins import GroupModuleMixin
 from django.db.models import Sum, F
@@ -31,6 +31,16 @@ class EarningReportView(GroupModuleMixin, FormView):
                     total_vendido=Sum('quantity')
                 ).order_by('product_id')
 
+                devoluciones_query = CreditNoteDetail.objects.filter(filters).values(
+                    'product_id'
+                ).annotate(
+                    total_devuelto=Sum('quantity')
+                )
+
+                devoluciones_map = {}
+                for dev in devoluciones_query:
+                    devoluciones_map[dev['product_id']] = float(dev['total_devuelto'])
+
                 compras = PurchaseDetail.objects.filter(filters).select_related(
                     'purchase', 'product', 'product__category'
                 ).order_by('product_id', 'purchase__time_joined')
@@ -41,21 +51,28 @@ class EarningReportView(GroupModuleMixin, FormView):
                     lotes_por_producto[c.product_id].append({
                         'id': c.id,
                         'price': float(c.price),
+                        'quantity_original': float(c.quantity),
                         'quantity': float(c.quantity),
                         'name': c.product.name,
                         'category': c.product.category.name if c.product.category else 'S/C'
                     })
 
-                # dict_ventas = {v['product_id']: v['total_vendido'] for v in ventas_query}
-                #
-                # compras = PurchaseDetail.objects.filter(filters).select_related('purchase', 'product', 'product__category').order_by(
-                #     'product_id',
-                #     'purchase__time_joined'  # O 'purchase__date' según tu modelo
-                # )
-                #
-                # lotes_por_producto = defaultdict(list)
-                # for c in compras:
-                #     lotes_por_producto[c.product_id].append(c)
+                # 2. LÓGICA DE DEVOLUCIÓN ORDENADA (Reversa)
+                for p_id, cant_devuelta in devoluciones_map.items():
+                    if p_id in lotes_por_producto and cant_devuelta > 0:
+                        # Recorremos los lotes DE ATRÁS HACIA ADELANTE (el más reciente primero)
+                        for lote in reversed(lotes_por_producto[p_id]):
+                            if cant_devuelta <= 0:
+                                break
+
+                            # ¿Cuánto le falta a este lote para estar lleno como al principio?
+                            espacio_disponible = lote['quantity_original'] - lote['quantity']
+
+                            if espacio_disponible > 0:
+                                # Devolvemos solo lo que quepa o lo que tengamos
+                                reponer = min(espacio_disponible, cant_devuelta)
+                                lote['quantity'] += reponer
+                                cant_devuelta -= reponer
 
                 reporte_final = []
 

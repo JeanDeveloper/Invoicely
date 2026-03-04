@@ -131,7 +131,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product/%Y/%m/%d', null=True, blank=True, verbose_name='Imagen')
     barcode = models.ImageField(upload_to='barcode/%Y/%m/%d', null=True, blank=True, verbose_name='Código de barra')
     is_inventoried = models.BooleanField(default=True, verbose_name='¿Es inventariado?')
-    stock = models.IntegerField(default=0)
+    stock = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
     def __str__(self):
         return self.get_full_name()
@@ -400,7 +400,7 @@ class TransactionSummary(models.Model):
 
 class TransactionDetailBase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    quantity = models.IntegerField(default=0)
+    quantity = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     price = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     price_with_tax = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     subtotal = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
@@ -530,7 +530,7 @@ class AccountPayable(models.Model):
         return self.date_joined.strftime('%Y-%m-%d')
 
     def get_full_name(self):
-        return f"{self.purchase.provider.name} ({self.purchase.number}) / {self.formatted_date_joined()} / ${f'{self.debt:.2f}'}"
+        return f"{self.purchase.provider.name} ({self.purchase.number}) / {self.formatted_date_joined()} / S/.{f'{self.debt:.2f}'}"
 
     def validate_debt(self):
         try:
@@ -745,7 +745,7 @@ class AccountReceivable(models.Model):
         return self.date_joined.strftime('%Y-%m-%d')
 
     def get_full_name(self):
-        return f"{self.invoice.customer.user.names} ({self.invoice.customer.dni}) / {self.formatted_date_joined()} / ${f'{self.debt:.2f}'}"
+        return f"{self.invoice.customer.user.names} ({self.invoice.customer.dni}) / {self.formatted_date_joined()} / S/.{f'{self.debt:.2f}'}"
 
     def validate_debt(self):
         try:
