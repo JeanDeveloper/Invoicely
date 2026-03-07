@@ -53,11 +53,15 @@ var inventory = {
                 var tr = $(row).closest('tr');
                 tr.find('input[name="quantity"]')
                     .TouchSpin({
-                        min: 0,
-                        max: 10000000
+                        min: 0.00,
+                        max: 1000000,
+                        step: 0.10,
+                        decimals: 2,
+                        boostat: 5,
+                        maxboostedstep: 10
                     })
                     .on('keypress', function (e) {
-                        return validate_text_box({'event': e, 'type': 'numbers'});
+                        return validate_text_box({'event': e, 'type': 'decimals'});
                     });
             },
             initComplete: function (settings, json) {
@@ -111,7 +115,7 @@ $(function () {
         .off()
         .on('change', 'input[name="quantity"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
-            inventory.detail.products[tr.row].quantity = parseInt($(this).val());
+            inventory.detail.products[tr.row].quantity = parseFloat($(this).val());
         })
         .on('click', 'a[rel="remove"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();

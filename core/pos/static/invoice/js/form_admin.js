@@ -89,7 +89,7 @@ var invoice = {
                     targets: [-1],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 },
                 {
@@ -104,11 +104,15 @@ var invoice = {
                 var tr = $(row).closest('tr');
                 tr.find('input[name="quantity"]')
                     .TouchSpin({
-                        min: 1,
-                        max: data.is_inventoried ? data.stock : 1000000
+                        min: 0.00,
+                        max: data.is_inventoried ? data.stock : 1000000,
+                        step: 0.10,
+                        decimals: 2,
+                        boostat: 5,
+                        maxboostedstep: 10
                     })
                     .on('keypress', function (e) {
-                        return validate_text_box({'event': e, 'type': 'numbers'});
+                        return validate_text_box({'event': e, 'type': 'decimals'});
                     });
 
                 tr.find('input[name="current_price"]')
@@ -503,7 +507,7 @@ $(function () {
         .off()
         .on('change', 'input[name="quantity"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
-            invoice.detail.products[tr.row].quantity = parseInt($(this).val());
+            invoice.detail.products[tr.row].quantity = parseFloat($(this).val());
             invoice.totalCalculator();
             $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + invoice.detail.products[tr.row].total_amount.toFixed(2));
         })
@@ -558,7 +562,7 @@ $(function () {
                     targets: [-3, -4],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 },
                 {

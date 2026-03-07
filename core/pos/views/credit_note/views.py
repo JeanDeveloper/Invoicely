@@ -2,7 +2,6 @@ import json
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView
 
@@ -10,7 +9,7 @@ from core.pos.forms import CreditNoteForm, CreditNote, CreditNoteDetail, Invoice
 from core.pos.models import Company
 from core.report.forms import ReportForm
 from core.security.mixins import GroupPermissionMixin
-
+from django.http import JsonResponse
 
 class CreditNoteListView(GroupPermissionMixin, ListView):
     model = CreditNote
@@ -19,7 +18,7 @@ class CreditNoteListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -45,7 +44,7 @@ class CreditNoteListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -63,7 +62,7 @@ class CreditNoteCreateView(GroupPermissionMixin, CreateView):
     permission_required = 'add_credit_note_admin'
 
     def post(self, request, *args, **kwargs):
-        action = request.POST['action']
+        action = request.POST.get('action')
         data = {}
         try:
             if action == 'add':
@@ -81,7 +80,7 @@ class CreditNoteCreateView(GroupPermissionMixin, CreateView):
                             credit_note_id=credit_note.id,
                             invoice_detail_id=invoice_detail.id,
                             product_id=invoice_detail.product_id,
-                            quantity=int(i['new_quantity']),
+                            quantity=float(i['new_quantity']),
                             price=float(i['price']),
                             discount=float(i['discount']) / 100
                         )
@@ -104,7 +103,7 @@ class CreditNoteCreateView(GroupPermissionMixin, CreateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -126,7 +125,7 @@ class CreditNoteDeleteView(GroupPermissionMixin, DeleteView):
             self.get_object().delete()
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,7 +141,7 @@ class CreditNoteCustomerListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -161,7 +160,7 @@ class CreditNoteCustomerListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

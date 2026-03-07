@@ -1,130 +1,138 @@
 import json
 
-from django.db.models import Q
-from django.http import HttpResponse
+from django.db.models import Q, Sum
 from django.views.generic import FormView
 
-from core.pos.models import PurchaseDetail, InvoiceDetail, CreditNoteDetail
+from core.pos.models import PurchaseDetail, InvoiceDetail
 from core.report.forms import ReportForm
 from core.security.mixins import GroupModuleMixin
-from django.db.models import Sum, F
 from collections import defaultdict
+from decimal import Decimal
+from django.http import JsonResponse
 
 class EarningReportView(GroupModuleMixin, FormView):
     template_name = 'earning_report/report.html'
     form_class = ReportForm
 
     def post(self, request, *args, **kwargs):
-        action = request.POST['action']
+
+        action = request.POST.get('action')
         data = {}
+
         try:
-            if action == 'search' or action == 'search_graph':
-                product_id = json.loads(request.POST['product_id'])
-                filters = Q()
-                if len(product_id):
-                    filters &= Q(product_id__in=product_id)
 
-                ventas_query = InvoiceDetail.objects.filter(filters).values(
-                    'product_id',
-                    'price'
-                ).annotate(
-                    total_vendido=Sum('quantity')
-                ).order_by('product_id')
+            if action not in ['search', 'search_graph']:
+                return JsonResponse({'error': 'No ha seleccionado ninguna opción'}, safe=False)
 
-                devoluciones_query = CreditNoteDetail.objects.filter(filters).values(
-                    'product_id'
-                ).annotate(
-                    total_devuelto=Sum('quantity')
-                )
+            product_ids = json.loads(request.POST.get('product_id', '[]'))
 
-                devoluciones_map = {}
-                for dev in devoluciones_query:
-                    devoluciones_map[dev['product_id']] = float(dev['total_devuelto'])
+            filters = Q()
+            if product_ids:
+                filters &= Q(product_id__in=product_ids)
 
-                compras = PurchaseDetail.objects.filter(filters).select_related(
-                    'purchase', 'product', 'product__category'
-                ).order_by('product_id', 'purchase__time_joined')
+            # -------------------------
+            # 1️⃣ VENTAS
+            # -------------------------
 
-                lotes_por_producto = defaultdict(list)
-                for c in compras:
-                    # IMPORTANTE: Convertimos a objeto o dict para poder restar la cantidad en memoria
-                    lotes_por_producto[c.product_id].append({
-                        'id': c.id,
-                        'price': float(c.price),
-                        'quantity_original': float(c.quantity),
-                        'quantity': float(c.quantity),
-                        'name': c.product.name,
-                        'category': c.product.category.name if c.product.category else 'S/C'
+            ventas_query = (
+                InvoiceDetail.objects
+                .filter(filters)
+                .order_by('product_id', "id")
+            )
+
+            # -------------------------
+            # 2️⃣ COMPRAS (LOTES FIFO)
+            # -------------------------
+
+            compras = (
+                PurchaseDetail.objects
+                .filter(filters)
+                .select_related('product', 'product__category')
+                .order_by('product_id', 'id')
+            )
+
+            # Agrupamos lotes por producto
+            lotes_por_producto = defaultdict(list)
+
+            for compra in compras:
+                lotes_por_producto[compra.product_id].append({
+                    'price': compra.price,
+                    'quantity': compra.quantity,
+                    'name': compra.product.name,
+                    'category': compra.product.category.name if compra.product.category else 'S/C'
+                })
+
+            reporte_final = []
+
+            # -------------------------
+            # 3️⃣ PROCESO FIFO
+            # -------------------------
+
+            for venta in ventas_query:
+
+                product_id = venta.product_id
+                pvp = venta.price
+                cantidad_restante = venta.quantity
+
+                lotes = lotes_por_producto.get(product_id)
+
+                if not lotes:
+                    continue
+
+                # usamos índice para no recorrer siempre desde el inicio
+                i = 0
+
+                while cantidad_restante > 0 and i < len(lotes):
+
+                    lote = lotes[i]
+
+                    if lote['quantity'] <= 0:
+                        i += 1
+                        continue
+
+                    cantidad_a_tomar = min(lote['quantity'], cantidad_restante)
+
+                    ganancia = cantidad_a_tomar * (pvp - lote['price'])
+
+                    reporte_final.append({
+                        'product__name': lote['name'],
+                        'product__category__name': lote['category'],
+                        'product__price': lote['price'],
+                        'product__pvp': pvp,
+                        'total_qty': cantidad_a_tomar,
+                        'total_benefit': ganancia
                     })
 
-                # 2. LÓGICA DE DEVOLUCIÓN ORDENADA (Reversa)
-                for p_id, cant_devuelta in devoluciones_map.items():
-                    if p_id in lotes_por_producto and cant_devuelta > 0:
-                        # Recorremos los lotes DE ATRÁS HACIA ADELANTE (el más reciente primero)
-                        for lote in reversed(lotes_por_producto[p_id]):
-                            if cant_devuelta <= 0:
-                                break
+                    # descontamos cantidades
+                    lote['quantity'] -= cantidad_a_tomar
+                    cantidad_restante -= cantidad_a_tomar
 
-                            # ¿Cuánto le falta a este lote para estar lleno como al principio?
-                            espacio_disponible = lote['quantity_original'] - lote['quantity']
+                    if lote['quantity'] <= 0:
+                        i += 1
 
-                            if espacio_disponible > 0:
-                                # Devolvemos solo lo que quepa o lo que tengamos
-                                reponer = min(espacio_disponible, cant_devuelta)
-                                lote['quantity'] += reponer
-                                cant_devuelta -= reponer
+            # -------------------------
+            # 4️⃣ CONVERTIR DECIMAL A FLOAT PARA JSON
+            # -------------------------
 
-                reporte_final = []
+            for r in reporte_final:
+                r['product__price'] = float(r['product__price'])
+                r['product__pvp'] = float(r['product__pvp'])
+                r['total_qty'] = float(r['total_qty'])
+                r['total_benefit'] = float(r['total_benefit'])
 
-                # 3. Procesamos las ventas
-                for venta in ventas_query:
-                    p_id = venta['product_id']
-                    pvp_cobrado = float(venta['price'])  # <--- El precio editado por el usuario
-                    cantidad_restante_venta = float(venta['total_vendido'])
+            # -------------------------
+            # 5️⃣ RESPUESTA
+            # -------------------------
 
-                    lotes = lotes_por_producto.get(p_id, [])
-
-                    for lote in lotes:
-                        if cantidad_restante_venta <= 0:
-                            break
-
-                        if lote['quantity'] <= 0:
-                            continue  # Este lote ya se agotó con una venta anterior
-
-                        # Cantidad a tomar de este lote para esta venta específica
-                        cantidad_a_tomar = min(lote['quantity'], cantidad_restante_venta)
-
-                        if cantidad_a_tomar > 0:
-                            ganancia_tramo = cantidad_a_tomar * (pvp_cobrado - lote['price'])
-
-                            reporte_final.append({
-                                'product__name': lote['name'],
-                                'product__category__name': lote['category'],
-                                'product__price': lote['price'],
-                                'product__pvp': pvp_cobrado,  # <--- Mostrará el precio real de la venta
-                                'total_qty': cantidad_a_tomar,
-                                'total_benefit': float(ganancia_tramo)
-                            })
-
-                            # Descontamos del lote para que la siguiente venta no use lo mismo
-                            lote['quantity'] -= cantidad_a_tomar
-                            cantidad_restante_venta -= cantidad_a_tomar
-
-                # 4. Respuesta para la tabla o gráfico
-                if action == 'search':
-                    data = reporte_final
-                elif action == 'search_graph':
-                    # Aquí llamamos a la función que acabamos de crear
-                    data = self.get_graph_data(reporte_final)
-                else:
-                    # Para el gráfico, quizás prefieras agrupar por nombre para no tener mil barras
-                    data = self.get_graph_data(reporte_final)  # Función opcional para agrupar
-
+            if action == 'search':
+                data = reporte_final
             else:
-                data['error'] = 'No ha seleccionado ninguna opción'
+                data = self.get_graph_data(reporte_final)
+
         except Exception as e:
-            data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+            data = {'error': str(e)}
+
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

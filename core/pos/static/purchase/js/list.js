@@ -55,7 +55,7 @@ var purchase = {
                     targets: [-2, -3, -4, -5],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 },
                 {
@@ -136,7 +136,7 @@ $(function () {
                         targets: [-1, -3],
                         class: 'text-center',
                         render: function (data, type, row) {
-                            return 'S/' + data.toFixed(2);
+                            return Number(data || 0).toFixed(2);
                         }
                     },
                     {
