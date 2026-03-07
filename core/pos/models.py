@@ -3,6 +3,7 @@ import math
 import os
 import smtplib
 from datetime import datetime
+from decimal import Decimal
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -13,7 +14,7 @@ from barcode import writer
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models import F, Sum, FloatField
+from django.db.models import F, Sum, FloatField, DecimalField
 from django.db.models.functions import Coalesce
 from django.forms import model_to_dict
 
@@ -358,7 +359,7 @@ class TransactionSummary(models.Model):
 
     @property
     def subtotal(self):
-        return float(self.subtotal_without_tax)
+        return self.subtotal_without_tax
 
     @property
     def tax_rate(self):
@@ -446,28 +447,28 @@ class Purchase(TransactionSummary):
 
     def calculate_detail(self):
         for detail in self.purchasedetail_set.filter():
-            detail.price = float(detail.price)
-            detail.tax = float(self.tax)
+            detail.price = Decimal(str(detail.price))
+            detail.tax = Decimal(str(self.tax))
             detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
-            detail.total_discount = detail.subtotal * float(detail.discount)
+            detail.total_discount = detail.subtotal * Decimal(str(detail.discount))
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
             detail.total_amount = detail.subtotal - detail.total_discount
             detail.save()
 
     def calculate_invoice(self):
         totals = self.purchasedetail_set.aggregate(
-            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
-            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=DecimalField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=DecimalField())
         )
 
         subtotal = totals['total_subtotal']
         discount = totals['total_discount']
 
-        self.total_tax = float(self.purchasedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.total_tax = self.purchasedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=DecimalField()))['result']
         self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
-        self.total_discount = float(self.purchasedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
-        self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
+        self.total_discount = self.purchasedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=DecimalField()))['result']
+        self.total_amount = round(self.subtotal, 2) + Decimal(str(self.total_tax))
         self.save()
 
     def recalculate_invoice(self):
@@ -613,34 +614,34 @@ class Invoice(TransactionSummary):
 
     @property
     def subtotal_without_taxes(self):
-        return float(self.invoicedetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField()))['result'])
+        return self.invoicedetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField()))['result']
 
     def get_full_name(self):
         return f'{self.receipt_number_full} / {self.customer.get_full_name()})'
 
     def calculate_detail(self):
         for detail in self.invoicedetail_set.filter():
-            detail.price = float(detail.price)
-            detail.tax = float(self.tax)
+            detail.price = Decimal(str(detail.price))
+            detail.tax = Decimal(str(self.tax))
             detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
-            detail.total_discount = detail.subtotal * float(detail.discount)
+            detail.total_discount = detail.subtotal * Decimal(str(detail.discount))
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
             detail.total_amount = detail.subtotal - detail.total_discount
             detail.save()
 
     def calculate_invoice(self):
         totals = self.invoicedetail_set.aggregate(
-            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
-            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=DecimalField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=DecimalField())
         )
         subtotal = totals['total_subtotal']
         discount = totals['total_discount']
 
-        self.total_tax = float(self.invoicedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.total_tax = self.invoicedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=DecimalField()))['result']
         self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
-        self.total_discount = float(self.invoicedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
-        self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
+        self.total_discount = self.invoicedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=DecimalField()))['result']
+        self.total_amount = round(self.subtotal, 2) + Decimal(str(self.total_tax))
         self.save()
 
     def recalculate_invoice(self):
@@ -824,32 +825,32 @@ class CreditNote(TransactionSummary):
 
     @property
     def subtotal_without_taxes(self):
-        return float(self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField()))['result'])
+        return float(self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=DecimalField()))['result'])
 
     def calculate_detail(self):
         for detail in self.creditnotedetail_set.filter():
-            detail.price = float(detail.price)
-            detail.tax = float(self.tax)
+            detail.price = Decimal(str(detail.price))
+            detail.tax = Decimal(str(self.tax))
             detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
-            detail.total_discount = detail.subtotal * float(detail.discount)
+            detail.total_discount = detail.subtotal * Decimal(str(detail.discount))
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
             detail.total_amount = detail.subtotal - detail.total_discount
             detail.save()
 
     def calculate_invoice(self):
         totals = self.creditnotedetail_set.aggregate(
-            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
-            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=DecimalField()),
+            total_discount=Coalesce(Sum('total_discount'), 0.0, output_field=DecimalField())
         )
 
         subtotal = totals['total_subtotal']
         discount = totals['total_discount']
 
-        self.total_tax = float(self.creditnotedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.total_tax = self.creditnotedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=DecimalField()))['result']
         self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
-        self.total_discount = float(self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
-        self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
+        self.total_discount = self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=DecimalField()))['result']
+        self.total_amount = round(self.subtotal, 2) + Decimal(str(self.total_tax))
         self.save()
 
     def recalculate_invoice(self):
@@ -917,7 +918,7 @@ class Quotation(TransactionSummary):
 
     @property
     def subtotal_without_taxes(self):
-        return float(self.quotationdetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField()))['result'])
+        return self.quotationdetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=DecimalField()))['result']
 
     @property
     def formatted_number(self):
@@ -951,28 +952,28 @@ class Quotation(TransactionSummary):
 
     def calculate_detail(self):
         for detail in self.quotationdetail_set.filter():
-            detail.price = float(detail.price)
-            detail.tax = float(self.tax)
+            detail.price = Decimal(str(detail.price))
+            detail.tax = Decimal(str(self.tax))
             detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
-            detail.total_discount = detail.subtotal * float(detail.discount)
+            detail.total_discount = detail.subtotal * Decimal(str(detail.discount))
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
             detail.total_amount = detail.subtotal - detail.total_discount
             detail.save()
 
     def calculate_invoice(self):
         totals = self.quotationdetail_set.aggregate(
-            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=FloatField()),
-            total_discount = Coalesce(Sum('total_discount'), 0.0, output_field=FloatField())
+            total_subtotal=Coalesce(Sum('subtotal'), 0.0, output_field=DecimalField()),
+            total_discount = Coalesce(Sum('total_discount'), 0.0, output_field=DecimalField())
         )
 
         subtotal = totals['total_subtotal']
         discount = totals['total_discount']
 
-        self.total_tax = float(self.quotationdetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=FloatField()))['result'])
+        self.total_tax = self.quotationdetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=DecimalField()))['result']
         self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
-        self.total_discount = float(self.quotationdetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=FloatField()))['result'])
-        self.total_amount = round(self.subtotal, 2) + float(self.total_tax)
+        self.total_discount = self.quotationdetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=DecimalField()))['result']
+        self.total_amount = round(self.subtotal, 2) + Decimal(str(self.total_tax))
         self.save()
 
     def recalculate_invoice(self):

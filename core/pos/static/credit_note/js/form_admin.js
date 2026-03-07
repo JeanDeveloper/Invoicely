@@ -55,7 +55,7 @@ var credit_note = {
                     targets: [-3],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 },
                 {
@@ -70,7 +70,7 @@ var credit_note = {
                     targets: [-1],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 }
             ],
@@ -303,7 +303,7 @@ $(function () {
         })
         .on('change', 'input[name="new_quantity"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
-            credit_note.detail.products[tr.row].new_quantity = parseInt($(this).val());
+            credit_note.detail.products[tr.row].new_quantity = parseFloat($(this).val());
             credit_note.totalCalculator();
             $('td:last', tblProducts.row(tr.row).node()).html('S/ ' + credit_note.detail.products[tr.row].total_amount.toFixed(2));
         })

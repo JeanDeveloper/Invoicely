@@ -50,7 +50,7 @@ var quotation = {
                     targets: [-2, -3, -4, -5],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return 'S/' + data.toFixed(2);
+                        return Number(data || 0).toFixed(2);
                     }
                 },
                 {
@@ -121,7 +121,7 @@ $(function () {
                         targets: [-5],
                         class: 'text-center',
                         render: function (data, type, row) {
-                            return 'S/' + data.toFixed(2);
+                            return Number(data || 0).toFixed(2);
                         }
                     },
                     {
@@ -145,7 +145,7 @@ $(function () {
                         targets: [-1, -2],
                         class: 'text-center',
                         render: function (data, type, row) {
-                            return 'S/' + data.toFixed(2);
+                            return Number(data || 0).toFixed(2);
                         }
                     },
                 ],

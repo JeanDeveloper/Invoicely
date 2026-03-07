@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -10,7 +11,7 @@ from core.pos.forms import InvoiceForm, Invoice, Customer, Product, InvoiceDetai
 from core.pos.utilities.pdf_creator import PDFCreator
 from core.report.forms import ReportForm
 from core.security.mixins import GroupPermissionMixin
-
+from django.http import JsonResponse
 
 class InvoiceListView(GroupPermissionMixin, ListView):
     model = Invoice
@@ -19,7 +20,7 @@ class InvoiceListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -73,7 +74,7 @@ class InvoiceListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -101,7 +102,7 @@ class InvoiceCreateView(GroupPermissionMixin, CreateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'add':
                 with transaction.atomic():
@@ -120,7 +121,7 @@ class InvoiceCreateView(GroupPermissionMixin, CreateView):
                         invoice_detail = InvoiceDetail.objects.create(
                             invoice_id=invoice.id,
                             product_id=product.id,
-                            quantity=int(i['quantity']),
+                            quantity=Decimal(str(i['quantity'])),
                             price=float(i['current_price']),
                             discount=float(i['discount']) / 100
                         )
@@ -166,7 +167,7 @@ class InvoiceCreateView(GroupPermissionMixin, CreateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -197,7 +198,7 @@ class InvoiceUpdateView(GroupPermissionMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'edit':
                 with transaction.atomic():
@@ -217,7 +218,7 @@ class InvoiceUpdateView(GroupPermissionMixin, UpdateView):
                         invoice_detail = InvoiceDetail.objects.create(
                             invoice_id=invoice.id,
                             product_id=product.id,
-                            quantity=int(i['quantity']),
+                            quantity=Decimal(str(i['quantity'])),
                             price=float(i['current_price']),
                             discount=float(i['discount']) / 100
                         )
@@ -263,7 +264,7 @@ class InvoiceUpdateView(GroupPermissionMixin, UpdateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_products(self):
         data = []
@@ -352,7 +353,7 @@ class InvoiceCustomerListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

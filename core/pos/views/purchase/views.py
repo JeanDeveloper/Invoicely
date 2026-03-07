@@ -1,8 +1,8 @@
 import json
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView
 
@@ -10,7 +10,7 @@ from core.pos.forms import PurchaseForm, Purchase, PurchaseDetail, Product, Prov
 from core.pos.models import Company
 from core.report.forms import ReportForm
 from core.security.mixins import GroupPermissionMixin
-
+from django.http import JsonResponse
 
 class PurchaseListView(GroupPermissionMixin, ListView):
     model = Purchase
@@ -19,7 +19,7 @@ class PurchaseListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -38,7 +38,7 @@ class PurchaseListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -56,7 +56,7 @@ class PurchaseCreateView(GroupPermissionMixin, CreateView):
     permission_required = 'add_purchase'
 
     def post(self, request, *args, **kwargs):
-        action = request.POST['action']
+        action = request.POST.get('action')
         data = {}
         try:
             if action == 'add':
@@ -75,7 +75,7 @@ class PurchaseCreateView(GroupPermissionMixin, CreateView):
                         detail = PurchaseDetail.objects.create(
                             purchase_id=purchase.id,
                             product_id=product.id,
-                            quantity=int(i['quantity']),
+                            quantity=Decimal(str(i['quantity'])),
                             price=float(i['current_price']),
                             discount=float(i['discount']) / 100
                         )
@@ -114,7 +114,7 @@ class PurchaseCreateView(GroupPermissionMixin, CreateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -136,7 +136,7 @@ class PurchaseDeleteView(GroupPermissionMixin, DeleteView):
             self.get_object().delete()
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

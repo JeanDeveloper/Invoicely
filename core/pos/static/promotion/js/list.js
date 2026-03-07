@@ -127,7 +127,7 @@ $(function () {
                         targets: [-1, -2, -4],
                         class: 'text-center',
                         render: function (data, type, row) {
-                            return 'S/' + data.toFixed(2);
+                            return Number(data || 0).toFixed(2);
                         }
                     }
                 ],

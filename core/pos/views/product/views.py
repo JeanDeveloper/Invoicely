@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from io import BytesIO
 
 import pandas as pd
@@ -11,6 +12,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.views.generic.base import View
+from django.http import JsonResponse
 
 from core.pos.forms import ProductForm, Product, Category
 from core.security.mixins import GroupPermissionMixin
@@ -23,7 +25,7 @@ class ProductListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -41,7 +43,7 @@ class ProductListView(GroupPermissionMixin, ListView):
                                 'category': Category.objects.get_or_create(name=record['Categoría'])[0],
                                 'price': float(record['Precio de Compra']),
                                 'pvp': float(record['Precio de Venta']),
-                                'stock': int(record['Stock']),
+                                'stock': float(record['Stock']),
                                 'is_inventoried': record['¿Es inventariado?'],
                                 'has_tax': record['¿Se cobra impuesto?']
                             }
@@ -51,7 +53,7 @@ class ProductListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -69,7 +71,7 @@ class ProductCreateView(GroupPermissionMixin, CreateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'add':
                 data = self.get_form().save()
@@ -83,7 +85,7 @@ class ProductCreateView(GroupPermissionMixin, CreateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -106,7 +108,7 @@ class ProductUpdateView(GroupPermissionMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'edit':
                 data = self.get_form().save()
@@ -120,7 +122,7 @@ class ProductUpdateView(GroupPermissionMixin, UpdateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -142,7 +144,7 @@ class ProductDeleteView(GroupPermissionMixin, DeleteView):
             self.get_object().delete()
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -158,7 +160,7 @@ class ProductStockAdjustmentView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search_product':
                 data = []
@@ -178,13 +180,13 @@ class ProductStockAdjustmentView(GroupPermissionMixin, ListView):
                 with transaction.atomic():
                     for i in json.loads(request.POST['products']):
                         product = self.model.objects.get(pk=i['id'])
-                        product.stock = int(i['quantity'])
+                        product.stock = Decimal(str(i['quantity']))
                         product.save()
             else:
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -201,7 +203,7 @@ class ProductExportExcelView(LoginRequiredMixin, View):
                 ('Categoría', 35, lambda c: c.category.name),
                 ('Precio de Compra', 30, lambda c: f'{c.price:.2f}'),
                 ('Precio de Venta', 30, lambda c: f'{c.pvp:.2f}'),
-                ('Stock', 30, lambda c: f'{c.stock}'),
+                ('Stock', 30, lambda c: f'{c.stock:.2f}'),
                 ('¿Es inventariado?', 30, lambda c: c.is_inventoried),
                 ('¿Se cobra impuesto?', 30, lambda c: c.has_tax),
             ]

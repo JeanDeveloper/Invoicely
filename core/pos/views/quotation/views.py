@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -10,7 +11,7 @@ from core.pos.forms import QuotationForm, Quotation, Customer, Product, Quotatio
 from core.pos.utilities.pdf_creator import PDFCreator
 from core.report.forms import ReportForm
 from core.security.mixins import GroupPermissionMixin
-
+from django.http import JsonResponse
 
 class QuotationListView(GroupPermissionMixin, ListView):
     model = Quotation
@@ -19,7 +20,7 @@ class QuotationListView(GroupPermissionMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'search':
                 data = []
@@ -53,7 +54,7 @@ class QuotationListView(GroupPermissionMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -76,7 +77,7 @@ class QuotationCreateView(GroupPermissionMixin, CreateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        action = request.POST['action']
+        action = request.POST.get('action')
         try:
             if action == 'add':
                 with transaction.atomic():
@@ -92,7 +93,7 @@ class QuotationCreateView(GroupPermissionMixin, CreateView):
                         QuotationDetail.objects.create(
                             quotation_id=quotation.id,
                             product_id=product.id,
-                            quantity=int(i['quantity']),
+                            quantity=Decimal(str(i['quantity'])),
                             price=float(i['current_price']),
                             discount=float(i['discount']) / 100
                         )
@@ -130,7 +131,7 @@ class QuotationCreateView(GroupPermissionMixin, CreateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -176,7 +177,7 @@ class QuotationUpdateView(GroupPermissionMixin, UpdateView):
                         QuotationDetail.objects.create(
                             quotation_id=quotation.id,
                             product_id=product.id,
-                            quantity=int(i['quantity']),
+                            quantity=Decimal(str(i['quantity'])),
                             price=float(i['current_price']),
                             discount=float(i['discount']) / 100
                         )
@@ -214,7 +215,7 @@ class QuotationUpdateView(GroupPermissionMixin, UpdateView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_products(self):
         data = []
@@ -249,7 +250,7 @@ class QuotationDeleteView(GroupPermissionMixin, DeleteView):
             self.get_object().delete()
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
