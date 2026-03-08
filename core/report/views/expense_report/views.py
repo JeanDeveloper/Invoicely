@@ -1,13 +1,11 @@
-import json
 
 from django.db.models import Q
-from django.http import HttpResponse
 from django.views.generic import ListView
 
 from core.pos.models import Expense
 from core.report.forms import ReportForm
 from core.security.mixins import GroupModuleMixin
-
+from django.http import JsonResponse
 
 class ExpenseReportView(GroupModuleMixin, ListView):
     model = Expense
@@ -30,7 +28,7 @@ class ExpenseReportView(GroupModuleMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

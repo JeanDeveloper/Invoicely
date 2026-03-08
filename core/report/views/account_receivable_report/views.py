@@ -1,7 +1,7 @@
 import json
 
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.views.generic import ListView
 
 from core.pos.models import AccountReceivable
@@ -30,7 +30,7 @@ class AccountReceivableReportView(GroupModuleMixin, ListView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

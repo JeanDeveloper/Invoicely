@@ -1,11 +1,10 @@
 import calendar
-import json
 from datetime import datetime
 
 from django.db.models import Sum, FloatField, Q
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
 from django.views.generic import FormView
+from django.http import JsonResponse
 
 from core.pos.models import Purchase, Invoice, Expense
 from core.report.forms import ReportForm
@@ -45,7 +44,7 @@ class ResultReportView(GroupModuleMixin, FormView):
                 data['error'] = 'No ha seleccionado ninguna opción'
         except Exception as e:
             data['error'] = str(e)
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
