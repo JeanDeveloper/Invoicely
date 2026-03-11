@@ -167,7 +167,6 @@ var invoice = {
             value.total_amount = value.subtotal - value.total_discount;
         });
 
-
         this.detail.subtotal = this.detail.products.reduce((a, b) => a + (b.subtotal || 0), 0);
         this.detail.total_discount = this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0);
         this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0));
