@@ -119,7 +119,7 @@ var invoice = {
                     .TouchSpin({
                         min: 0.00,
                         max: 1000000,
-                        step: 0.10,
+                        step: 0.01,
                         decimals: 2,
                         boostat: 5,
                         maxboostedstep: 10
@@ -169,7 +169,7 @@ var invoice = {
 
         this.detail.subtotal = this.detail.products.reduce((a, b) => a + (b.subtotal || 0), 0);
         this.detail.total_discount = this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0);
-        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0));
         this.detail.subtotal = parseFloat(this.detail.subtotal) - (this.detail.total_discount > 0 ? parseFloat(this.detail.total_discount) : 0) - parseFloat(this.detail.total_tax);
         this.detail.total_amount = (Math.round(this.detail.subtotal * 100) / 100) + (Math.round(this.detail.total_tax * 100) / 100);
 
