@@ -153,8 +153,8 @@ var purchase = {
         });
 
         this.detail.subtotal = parseFloat(this.detail.products.reduce((a, b) => a + b.subtotal, 0));
-        this.detail.total_discount = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0).toFixed(2));
-        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0).toFixed(3));
+        this.detail.total_discount = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_discount || 0), 0));
+        this.detail.total_tax = parseFloat(this.detail.products.reduce((a, b) => a + (b.total_tax || 0), 0));
         this.detail.subtotal = parseFloat(this.detail.subtotal) - (this.detail.total_discount > 0 ? parseFloat(this.detail.total_discount) : 0) - parseFloat(this.detail.total_tax);
         this.detail.total_amount = (Math.round(this.detail.subtotal * 100) / 100) + (Math.round(this.detail.total_tax * 100) / 100);
 
