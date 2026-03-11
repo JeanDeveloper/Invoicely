@@ -3,7 +3,7 @@ import math
 import os
 import smtplib
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -850,7 +850,10 @@ class CreditNote(TransactionSummary):
         self.total_tax = self.creditnotedetail_set.aggregate(result=Coalesce(Sum('total_tax'), 0.00, output_field=DecimalField()))['result']
         self.subtotal_without_tax = subtotal - (discount if discount > 0 else 0) - self.total_tax
         self.total_discount = self.creditnotedetail_set.filter().aggregate(result=Coalesce(Sum('total_discount'), 0.00, output_field=DecimalField()))['result']
-        self.total_amount = round(self.subtotal, 2) + Decimal(str(self.total_tax))
+        self.total_amount = (self.subtotal_without_tax + self.total_tax).quantize(
+            Decimal('0.01'),
+            rounding=ROUND_HALF_UP
+        )
         self.save()
 
     def recalculate_invoice(self):
@@ -956,7 +959,7 @@ class Quotation(TransactionSummary):
             detail.tax = Decimal(str(self.tax))
             detail.price_with_tax = detail.price
             detail.subtotal = detail.price * detail.quantity
-            detail.total_discount = detail.subtotal * Decimal(str(detail.discount))
+            detail.total_discount = detail.subtotal * (Decimal(str(detail.discount)) / Decimal('100'))
             detail.total_tax = (detail.subtotal - detail.total_discount) * detail.tax
             detail.total_amount = detail.subtotal - detail.total_discount
             detail.save()
