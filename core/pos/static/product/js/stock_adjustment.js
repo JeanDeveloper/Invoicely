@@ -55,7 +55,7 @@ var inventory = {
                     .TouchSpin({
                         min: 0.00,
                         max: 1000000,
-                        step: 0.10,
+                        step: 0.01,
                         decimals: 2,
                         boostat: 5,
                         maxboostedstep: 10
