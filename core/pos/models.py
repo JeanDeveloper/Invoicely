@@ -970,7 +970,6 @@ class Quotation(TransactionSummary):
             total_discount = Coalesce(Sum('total_discount'), 0.0, output_field=DecimalField())
         )
 
-
         subtotal = totals['total_subtotal']
         discount = totals['total_discount']
 
