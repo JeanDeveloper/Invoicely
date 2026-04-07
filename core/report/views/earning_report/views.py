@@ -1,13 +1,12 @@
 import json
 
-from django.db.models import Q, Sum
+from django.db.models import Q
 from django.views.generic import FormView
 
 from core.pos.models import PurchaseDetail, InvoiceDetail
 from core.report.forms import ReportForm
 from core.security.mixins import GroupModuleMixin
 from collections import defaultdict
-from decimal import Decimal
 from django.http import JsonResponse
 
 class EarningReportView(GroupModuleMixin, FormView):

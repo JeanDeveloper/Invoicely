@@ -7,6 +7,7 @@ from core.report.views.expense_report.views import ExpenseReportView
 from core.report.views.invoice_report.views import InvoiceReportView
 from core.report.views.purchase_report.views import PurchaseReportView
 from core.report.views.result_report.views import ResultReportView
+from core.report.views.product_report.views import ProductReportView
 
 urlpatterns = [
     path('invoice/', InvoiceReportView.as_view(), name='invoice_report'),
@@ -16,4 +17,6 @@ urlpatterns = [
     path('account/receivable/', AccountReceivableReportView.as_view(), name='account_receivable_report'),
     path('result/', ResultReportView.as_view(), name='result_report'),
     path('earning/', EarningReportView.as_view(), name='earning_report'),
+    path('product/', ProductReportView.as_view(), name='product_report'),
+
 ]
