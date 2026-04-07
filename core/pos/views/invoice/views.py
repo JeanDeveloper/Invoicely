@@ -63,10 +63,11 @@ class InvoiceListView(GroupPermissionMixin, ListView):
                         credit_note_detail.discount = invoice_detail.discount
                         credit_note_detail.save()
                     credit_note.recalculate_invoice()
+                    # credit_note.save()
                     credit_note.status = INVOICE_STATUS[1][0]
                     credit_note.save()
-                    invoice.status = INVOICE_STATUS[3][0]
-                    invoice.save()
+                    # invoice.status = INVOICE_STATUS[3][0]
+                    # invoice.save()
             elif action == 'send_receipt_by_email':
                 invoice = self.model.objects.get(pk=request.POST['id'])
                 data = invoice.send_invoice_files_to_customer()
