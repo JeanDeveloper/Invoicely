@@ -113,7 +113,7 @@ var report = {
             columns: [
                 {data: "product_nam"},
                 {data: "category_nam"},
-                {data: "customer_dni"},
+                {data: "customer_name"},
                 {data: "date"},
                 {data: "quantity"}
             ],
