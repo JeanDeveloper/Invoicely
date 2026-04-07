@@ -24,7 +24,7 @@ class ProductReportView(GroupModuleMixin, FormView):
                 queryset = InvoiceDetail.objects.filter(filters).values(
                     'product__name',
                     'product__category__name',
-                    'invoice__customer__dni',
+                    'invoice__customer__user__names',
                     'invoice__date_joined',
                     'quantity',
                 ).order_by('invoice__time_joined')
@@ -33,7 +33,7 @@ class ProductReportView(GroupModuleMixin, FormView):
                     data.append({
                         'product_nam': item['product__name'],
                         'category_nam': item['product__category__name'],
-                        'customer_dni': item['invoice__customer__dni'],
+                        'customer_name': item['invoice__customer__user__names'],
                         'date': item['invoice__date_joined'].strftime('%d/%m/%Y'),
                         'quantity': item['quantity'],
                     })
