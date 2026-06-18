@@ -91,7 +91,8 @@
     <p class="text-center head-details">
         Dirección matriz: {{ object.company.address }}<br>
         Ruc: {{ object.company.ruc }}<br>
-        Teléfono: {{ object.company.phone }} / Celular: {{ object.company.mobile }}
+        Teléfono: {{ object.company.phone }} / Celular: {{ object.company.mobile }}<br>
+        Fecha: {{ object.formatted_time_joined }}
     </p>
     <p class="text-center head-voucher-number">TICKET N° {{ object.receipt_number_full }}</p>
     <p class="head-data">
